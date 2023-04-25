@@ -1,0 +1,140 @@
+import pygame
+import random
+
+pygame.init()
+
+# Define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
+GRAY = (128, 128, 128)
+
+# Set up the screen
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Shoot the Clouds")
+
+# Set up the clock
+clock = pygame.time.Clock()
+
+# Set up the player
+player_width = 50
+player_height = 50
+player_x = SCREEN_WIDTH // 2 - player_width // 2
+player_y = SCREEN_HEIGHT - player_height - 10
+player_speed = 5
+player = pygame.Rect(player_x, player_y, player_width, player_height)
+
+# Set up the bullet
+bullet_radius = 5
+bullet_speed = 10
+bullet_list = []
+
+# Set up the cloud
+cloud_radius = 50
+cloud_speed = 3
+cloud_list = []
+
+# Set up the score
+score = 0
+font = pygame.font.SysFont(None, 36)
+
+# Function to draw the player
+def draw_player():
+    pygame.draw.rect(screen, BLUE, player)
+
+# Function to move the player
+def move_player(keys):
+    global player
+    if keys[pygame.K_LEFT] and player.left > 0:
+        player.x -= player_speed
+    if keys[pygame.K_RIGHT] and player.right < SCREEN_WIDTH:
+        player.x += player_speed
+
+# Function to draw the bullet
+def draw_bullet():
+    for bullet in bullet_list:
+        pygame.draw.circle(screen, GRAY, (bullet[0], bullet[1]), bullet_radius)
+
+# Function to move the bullet
+def move_bullet():
+    global bullet_list
+    for bullet in bullet_list:
+        bullet[1] -= bullet_speed
+    bullet_list = [bullet for bullet in bullet_list if bullet[1] > 0]
+
+# Function to draw the cloud
+def draw_cloud():
+    for cloud in cloud_list:
+        pygame.draw.circle(screen, WHITE, (cloud[0], cloud[1]), cloud_radius)
+
+# Function to move the cloud
+def move_cloud():
+    global cloud_list, score
+    for cloud in cloud_list:
+        cloud[1] += cloud_speed
+        if cloud[1] > SCREEN_HEIGHT:
+            score += 1
+            cloud_list.remove(cloud)
+    if len(cloud_list) < 5:
+        cloud_x = random.randint(cloud_radius, SCREEN_WIDTH - cloud_radius)
+        cloud_y = random.randint(-SCREEN_HEIGHT, -cloud_radius)
+        cloud_list.append([cloud_x, cloud_y])
+
+# Function to detect collision between bullet and cloud
+def detect_collision():
+    global score
+    for bullet in bullet_list:
+        for cloud in cloud_list:
+            distance = ((bullet[0] - cloud[0]) ** 2 + (bullet[1] - cloud[1]) ** 2) ** 0.5
+            if distance <= bullet_radius + cloud_radius:
+                score += 10
+                bullet_list.remove(bullet)
+                cloud_list.remove(cloud)
+
+# Function to display the score
+def display_score():
+    score_text = font.render("Score: " + str(score), True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+# Main game loop
+running = True
+while running:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bullet_x = player.x + player_width // 2
+                bullet_y = player.y
+                bullet_list.append([bullet_x, bullet_y])
+
+    # Move the player
+    keys = pygame.key.get_pressed()
+    move_player(keys)
+
+    # Move the bullet
+    move_bullet()
+
+    # Move the cloud
+    move_cloud()
+
+    # Detect collision between bullet and cloud
+    detect_collision()
+
+    # Draw everything on the screen
+    screen.fill(BLACK)
+    draw_player()
+    draw_bullet()
+    draw_cloud()
+    display_score()
+    pygame.display.update()
+
+    # Set the frame rate
+    clock.tick(60)
+
+# Quit the game
+pygame.quit()
+
