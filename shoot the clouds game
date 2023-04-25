@@ -1,3 +1,5 @@
+#put the code in notepad++ and save it as .py to your deskop, with python installed directly run the game. 
+
 import pygame
 import random
 
